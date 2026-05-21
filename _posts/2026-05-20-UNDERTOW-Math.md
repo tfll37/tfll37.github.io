@@ -1,6 +1,6 @@
 ---
 title: Project UNDERTOW - The Math Behind Calculating Priority Score for Manual Reverse Engineering
-date: 2026-05-21 15:00:00 +0100
+date: 2026-05-21 15:01:00 +0100
 categories:
   - Vulnerability Research
   - Reverse Engineering
