@@ -25,7 +25,8 @@ Why am I releasing this, since the tool is not fully complete? - This close frie
 
 Enough talk. Enjoy the paper. Algebra + Cybersecurity <3 
 
-![[/assets/pdf/posts/2025-05-21-undertow-math-post/The Mathematics of Project UNDERTOW WATERMARKED.pdf]]
+![UNDERTOW Math Paper](/assets/pdf/posts/2025-05-21-undertow-math-post/The-Mathematics-of-Project-UNDERTOW-WATERMARKED.pdf)
+![RaptX Team Logo](/assets/img/posts/2025-05-21-undertow-math-post/RAPTX-team-logo.png)
 ![[/assets/img/posts/2025-05-21-undertow-math-post/RAPTX team logo.png]]
 
 
