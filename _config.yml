@@ -18,6 +18,8 @@ title: Capital TFLL37 # the main title
 
 tagline: Malwares, obfuscation, automation, LLMs?, exploitation # it will display as the subtitle
 
+future: true
+
 description: >- # used by seo meta and the atom feed
   Cybersecurity research blog focusing on malware analysis, 
   reverse engineering, CTF writeups, and vulnerability research 
@@ -44,6 +46,7 @@ social:
     # Uncomment below to add more social links
     # - https://www.facebook.com/username
     # - https://www.linkedin.com/in/username
+    - https://x.com/dingototh
 
 # Site Verification Settings
 webmaster_verifications:
