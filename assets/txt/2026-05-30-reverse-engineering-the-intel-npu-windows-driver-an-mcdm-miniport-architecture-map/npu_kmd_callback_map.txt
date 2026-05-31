@@ -1,0 +1,87 @@
+npu_kmd.sys - DriverEntry Callback-Slot Map (DriverCallbacks structure)
+Source: Ghidra DriverEntry decompilation (npu_kmd_extract_report, EC3)
+
+Structure version field: Callbacks._0_4_ = 0x11008
+Cleared region: memset(&Callbacks, 0, 0x608)
+======================================================================
+offset(dec) offset(hex) function                   gating
+----------------------------------------------------------------------
+24          0x18        FUN_1403aadd0              
+32          0x20        FUN_1403aae40              
+40          0x28        FUN_140010940              
+48          0x30        FUN_140002640              
+56          0x38        FUN_1400026d0              
+64          0x40        FUN_140010900              
+72          0x48        FUN_140010910              
+80          0x50        FUN_140010920              
+88          0x58        FUN_1400027c0              
+104         0x68        FUN_1400108f0              
+120         0x78        FUN_140004290              build > 26999
+136         0x88        FUN_140002c60              
+144         0x90        FUN_140003130              
+152         0x98        FUN_140032560              
+160         0xa0        FUN_1400327d0              
+168         0xa8        FUN_140032910              
+176         0xb0        FUN_140032c60              
+208         0xd0        FUN_1400038a0              build > 21999
+216         0xd8        FUN_140003430              
+224         0xe0        FUN_140003390              
+256         0x100       FUN_140002870              
+264         0x108       FUN_1400028f0              
+272         0x110       FUN_140002740              
+280         0x118       FUN_140002960              
+400         0x190       FUN_1400031e0              
+408         0x198       FUN_1400329f0              
+416         0x1a0       FUN_140032ba0              
+464         0x1d0       KmCreateContext_Wrapper    
+472         0x1d8       FUN_140002fc0              
+568         0x238       FUN_140002b40              
+576         0x240       FUN_140003630              
+584         0x248       FUN_1400036c0              
+592         0x250       FUN_140003760              
+640         0x280       FUN_140002be0              
+664         0x298       FUN_140003250              
+696         0x2b8       FUN_140002cf0              
+704         0x2c0       FUN_140002e10              
+720         0x2d0       FUN_140003950              
+728         0x2d8       FUN_1400032e0              
+736         0x2e0       FUN_14003d3c0              
+768         0x300       FUN_1400034e0              
+776         0x308       FUN_140003590              
+816         0x330       FUN_140010930              
+856         0x358       FUN_140032c30              
+880         0x370       FUN_140003a30              build > 24999 (24H2 HWS path)
+888         0x378       FUN_140003a40              build > 24999 (24H2 HWS path)
+896         0x380       FUN_140003a50              build > 24999 (24H2 HWS path)
+904         0x388       FUN_140003b20              build > 24999 (24H2 HWS path)
+912         0x390       FUN_140003dc0              build > 24999 (24H2 HWS path)
+928         0x3a0       FUN_140003ba0              build > 24999 (24H2 HWS path)
+1056        0x420       FUN_140003f40              build > 24999 (24H2 HWS path)
+1064        0x428       FUN_140003eb0              build > 24999 (24H2 HWS path)
+1072        0x430       FUN_140004280              build > 24999 (24H2 HWS path)
+1080        0x438       FUN_140004030              build > 24999 (24H2 HWS path)
+1088        0x440       FUN_140004130              build > 24999 (24H2 HWS path)
+1096        0x448       FUN_1400041e0              build > 24999 (24H2 HWS path)
+1104        0x450       FUN_140010950              
+1112        0x458       FUN_1400049f0              
+1120        0x460       FUN_140004a30              
+1144        0x478       FUN_140003c50              build > 24999 (24H2 HWS path)
+1152        0x480       FUN_140004270              build > 24999 (24H2 HWS path)
+1168        0x490       FUN_140003ce0              build > 24999 (24H2 HWS path)
+1296        0x510       FUN_140004330              build > 24999 (24H2 HWS path)
+1304        0x518       FUN_140004790              build > 24999 (24H2 HWS path)
+1312        0x520       FUN_140004500              build > 24999 (24H2 HWS path)
+1320        0x528       FUN_1400045f0              build > 24999 (24H2 HWS path)
+1488        0x5d0       FUN_1400043f0              build > 24999 (24H2 HWS path)
+1496        0x5d8       FUN_1400046e0              build > 24999 (24H2 HWS path)
+1504        0x5e0       FUN_140004820              build > 24999 (24H2 HWS path)
+1512        0x5e8       FUN_140004910              build > 24999 (24H2 HWS path)
+1520        0x5f0       FUN_140002a50              
+1528        0x5f8       FUN_140003060              
+----------------------------------------------------------------------
+Notable slots:
+  _464  KmCreateContext_Wrapper  -> KmCreateContext (FUN_14001ee70, RVA 0x1ee70)
+  _472  FUN_140002fc0            adjacent destroy-context candidate
+Highest assignment: _1528 (0x5F8); +8 bytes ends at 1536 < 1544 (0x608),
+so every slot write lands inside the memset-cleared region.
+Build-number gating is read from RtlGetVersion(&local_148).

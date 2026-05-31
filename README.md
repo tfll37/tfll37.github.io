@@ -1,1 +1,1 @@
-This my migrated blog to GitHub. For any inquiries, reach out to me through my X account
+This my migrated blog to GitHub. For any inquiries, reach out to me through my [X account](https://x.com/dingototh) 
