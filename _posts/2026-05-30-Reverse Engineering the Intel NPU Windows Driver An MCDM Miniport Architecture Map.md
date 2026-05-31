@@ -14,12 +14,13 @@ tags:
 toc: true
 target: Intel® NPU Driver for Windows - npu_kmd.sys
 ---
-![[20260531153109.png]]
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260531153109.png]]
 ## Foreword
 
 After working a bit on Nvidia driver installers/drivers, and tooling for binary analysis, I decided to look for another cool project. Since I am constantly on foot, going between courses or cities, my laptop stays almost all the time with me. It was just recently when I found about the NPU chip that comes with my Intel Ultra CPU on the laptop. Never before I needed this so-called "AI boost" in an application of mine. However, I still think it is quite cool piece of tech.
 
-The first thing I decided to take on is running some local models on it and even made a small harness to deal with on-device translation using these NPU-loaded models. Intel NPUs, however, are optimized for running only OpenVINO models. ![[20260520142105.png]] You can learn what is OpenVINO here --> [link](https://www.intel.cn/content/dam/develop/public/us/en/documents/openvino-toolkit-llms-solution-white-paper.pdf). The key features span from easy integration such as multi-framework support (PyTorch, TensorFlow, TensorFlow Lite, PaddlePaddle, ONNX), optimized deployment and improved performance of LLMs on consumer Intel hardware.
+The first thing I decided to take on is running some local models on it and even made a small harness to deal with on-device translation using these NPU-loaded models. Intel NPUs, however, are optimized for running only OpenVINO models. 
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260520142105.png]] You can learn what is OpenVINO here --> [link](https://www.intel.cn/content/dam/develop/public/us/en/documents/openvino-toolkit-llms-solution-white-paper.pdf). The key features span from easy integration such as multi-framework support (PyTorch, TensorFlow, TensorFlow Lite, PaddlePaddle, ONNX), optimized deployment and improved performance of LLMs on consumer Intel hardware.
 
 As a sec guy, I also started fooling around. I went from poking at loaded weights and went all the way to trying to reverse the drivers for this. And so, this is my in-progress reverse engineering against a relatively obscure Windows kernel driver (while there are some relatively similar jobs done in the past, nothing explains the operations of the security-relevant mechanics. If there are and you can link them, please do send them to me, so I can include them here). Cool posts on this topic:
 
@@ -28,7 +29,8 @@ As a sec guy, I also started fooling around. I went from poking at loaded weight
 
 So, what is this post? - It's an architecture map and documentation, not a vulnerability disclosure. It contains no confirmed bug and I don't claim one (still ;p). Its purpose is to record how `npu_kmd.sys` is built, how it attaches to the Windows graphics stack, and how an MCDM miniport of this kind is reverse engineered, so the work is reusable as a starting point for anyone auditing this driver or a comparable one. Work paused here for other bug bounties and ideas, but more on this is in the end. This is the first post out of several others that will be coming out, with each one being more offensive than the previous. Right now, let's start slow and understand the whole scene.
 
-The target driver is `npu_kmd.sys`, identified as `Intel(R) NPU Driver` from `Intel(R)`. It is a kernel-mode binary that sits behind both the Microsoft DirectX graphics stack (through the D3D12 user-mode driver path) and the OpenVINO Level Zero stack, mediating access to Intel's Neural Processing Unit (the "AI Boost" device in Device Manager, Windows). ![[20260531124127.png]] 
+The target driver is `npu_kmd.sys`, identified as `Intel(R) NPU Driver` from `Intel(R)`. It is a kernel-mode binary that sits behind both the Microsoft DirectX graphics stack (through the D3D12 user-mode driver path) and the OpenVINO Level Zero stack, mediating access to Intel's Neural Processing Unit (the "AI Boost" device in Device Manager, Windows). 
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260531124127.png]] 
 _Figure 1 shows where npu_kmd.sys attaches in the Windows graphics dispatch hierarchy. The display path (grey) connects to dxgkrnl via WDM device objects with IRP-based dispatch. The NPU compute path (blue) connects via MCDM DDI callback registration. It creates no device object and exposes no IOCTL endpoint. Section 3 develops this distinction in full._
 
 ---
@@ -98,7 +100,7 @@ However, this assumption is wrong, and recognizing that it is wrong was importan
 
 `npu_kmd.sys` is an MCDM driver. MCDM stands for [Microsoft Compute Driver Model](https://learn.microsoft.com/en-us/windows-hardware/drivers/display/mcdm), and it is the kernel-side framework Microsoft introduced for compute-only accelerators that participate in the graphics dispatch infrastructure without exposing display capabilities. MCDM drivers register themselves with `dxgkrnl.sys` (the DirectX graphics kernel) as miniports. They do not maintain their own IOCTL dispatch table. They do not create their own device object with an IOCTL endpoint. Part of their attack surface is the DDI callback table they hand to `dxgkrnl` during registration, which `dxgkrnl` then invokes on their behalf when user-mode D3DKMT calls (the kernel-mode-thunk D3D kernel interface) arrive from above.
 
-![[20260520170243.png]] _Figure 2 - MCDM architecture overview._
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260520170243.png]] _Figure 2 - MCDM architecture overview._
 
 A WDM driver imports `IoCreateDevice`, `IoCreateSymbolicLink`, and `IofCompleteRequest`. A KMDF driver imports `WdfDriverCreate`, `WdfDeviceCreate`, and `WdfIoQueueCreate`. `npu_kmd.sys` imports neither set.
 
@@ -121,7 +123,7 @@ KSECDD.SYS     BCryptOpenAlgorithmProvider, BCryptHashData, BCryptFinishHash, ..
 WPPRECORDER.SYS imp_WppRecorderConfigure
 ```
 
-Full list: <a href="\assets\txt\2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map\npu_kmd_table.txt" class="glightbox" data-type="txt" data-title="npu_kmd.sys - full import table">Full import table of npu_kmd.sys</a>
+Full list: <a href="assets/txt/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/npu_kmd_table.txt" class="glightbox" data-type="txt" data-title="npu_kmd.sys - full import table">Full import table of npu_kmd.sys</a>
 
 Two observations follow directly from this list. First, the absence of `IoCreateDevice`/`IoCreateSymbolicLink` confirms the driver creates no device object of its own, and the absence of any `Wdf*` import confirms it is not KMDF-bound. Second, there is no static import of `dxgkrnl.sys` either. The driver does not link against the graphics kernel at load time. The MCDM interface is instead acquired _dynamically at runtime_: `DriverEntry` populates a callback structure and hands it to an internal routine (`IntelNPU_FrameworkInit`) that acquires the `dxgkrnl` interface through `IntelNPU_DxgkAcquireInterface__` and negotiates an interface IOCTL code via `DlpGetIoctlCode`. The classification of this driver as an MCDM miniport therefore rests on the _absence_ of both the WDM and KMDF marker sets combined with the presence of this runtime interface-negotiation path, not on a static `dxgkrnl` import. The functions the driver registers with `dxgkrnl` are detailed below.
 
@@ -188,7 +190,7 @@ Callbacks._1528_8_   = FUN_140003060;            // highest populated offset
 
 The complete map, covering all 79 slots with decimal and hex offset, write size, resolved target, and build-number gate, is also provided as a standalone, sortable HTML companion:
 
-<a href="\assets\txt\2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map\npu_kmd_callback_map.txt" class="glightbox" data-type="txt" data-title="npu_kmd.sys - full DriverEntry callback-slot map">Full DriverEntry callback-slot map</a>
+<a href="assets/txt/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/npu_kmd_callback_map.txt" class="glightbox" data-type="txt" data-title="npu_kmd.sys - full DriverEntry callback-slot map">Full DriverEntry callback-slot map</a>
 
 Several structural facts follow from the complete map. The context-creation slot is offset `_464`, holding `KmCreateContext_Wrapper` (`FUN_140002ed0`), which in turn invokes `KmCreateContext` (`FUN_14001ee70`) (the function is analyzed in Section 4), and its immediate neighbor `_472` (`FUN_140002fc0`) is the natural destroy-context candidate. The decompiler recovers three slots under symbolic names rather than raw offsets: `OnInitialize` at `_8`, `OnStart` at `_16`, and `OnStop` at `_112`. The lifecycle handlers cluster in the driver's own `0x1403aaXXX` range (`OnStart` = `FUN_1403aac70`, `OnStop` = `FUN_1403aacf0`, with `_24`/`_32` = `FUN_1403aadd0`/`FUN_1403aae40` adjacent); the bulk of the remaining unconditional slots point into the `FUN_140002xxx`–`FUN_140004xxx` and `FUN_14003xxxx` ranges, and a small post-version cluster (`_40`, `_64`, `_72`, `_80`, `_104`, `_816`, `_1104`) targets the contiguous `FUN_1400108f0`–`FUN_140010950` group.
 
@@ -242,15 +244,16 @@ A note on the cleared region versus the slot offsets, since the two can look inc
 
 This fact makes any IOCTL-fuzzing plan against this driver, pointless. Searching the binary for `WdfIoQueueCreate` finds nothing. Searching for `IRP_MJ_DEVICE_CONTROL` finds nothing. One actual attack surface is the set of DDI callback functions enumerated above, reached from user mode through the D3DKMT API exported by `gdi32.dll` (functions like `D3DKMTCreateContext`, `D3DKMTSubmitCommand`, `D3DKMTEscape`), which dispatches through `win32k.sys` into `dxgkrnl.sys`, which then invokes the registered DDI on the miniport.
 
-![[20260521165713.png]] _Figure 3 - Driver initialization and callback-structure registration._
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260521165713.png]] _Figure 3 - Driver initialization and callback-structure registration._
 
-![[20260525182901.png]] _Figure 4 - D3DKMT user-mode-to-DDI dispatch path_
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260525182901.png]] 
+_Figure 4 - D3DKMT user-mode-to-DDI dispatch path_
 
 This is structurally different from a conventional driver in three ways that matter for vulnerability research.
 
 The trust boundary sits between `dxgkrnl` and the miniport, not between user mode and the miniport. Anything the miniport receives has already been processed by `dxgkrnl`, which has its own validation layer. Whether `dxgkrnl` probes and copies user pointers before handing them to the miniport, or passes them through raw, is a question that has to be answered separately for each DDI. The DDI prototype (the function signature) is documented by Microsoft, but the _semantics of what_ `dxgkrnl` _does before invoking the DDI_ are not always documented in detail.
 
-![[20260525183103.png]] _Figure 5. Trust boundary (dxgkrnl validates <---> miniport assumes)_
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260525183103.png]] _Figure 5. Trust boundary (dxgkrnl validates <---> miniport assumes)_
 
 The miniport's namespace is owned by `dxgkrnl`. The miniport does not own its own device object. `\\.\IntelNPU0` does not exist. The user-mode entry point is `D3DKMTOpenAdapterFromLuid`, which goes through `dxgkrnl`, which routes through to the appropriate miniport based on the LUID. This means any user-mode harness has to use the D3DKMT API, not `CreateFile` on a named device.
 
@@ -426,7 +429,7 @@ Section 4.1 ended on a question that cannot be settled inside `npu_kmd.sys`: whe
 
 The path from user mode to the miniport runs through `D3DKMTCreateContext` (exported by `gdi32.dll`) --> the corresponding syscall stub in `win32k.sys` --> `NtGdiDdDDICreateContext` (the kernel-mode handler in `dxgkrnl.sys`) --> `DXGDEVICE::CreateContext` --> the registered miniport DDI. `NtGdiDdDDICreateContext` calls `DXGDEVICE::CreateContext` directly; the similarly-named `DxgkCreateContextVirtualInternal` / `DxgkCreateContextVirtualImpl` pair belongs to a separate sibling chain that serves the `D3DKMTCreateContextVirtual` entry point, not the non-virtual `D3DKMTCreateContext` path traced here. The chain still spans several stack-argument-heavy calls (which Ghidra's signature recovery reconstructed quite badly), inside which a probe-and-capture step might or might not occur.
 
-![[20260525183332.png]] _Figure 6 - internal dxgkrnl chain + Full-Capture inset_ (The internal dxgkrnl call chain from NtGdiDdDDICreateContext through DXGDEVICE::CreateContext, with the three-step Full-Capture inset (RtlCopyVolatileMemory -> operator_new[] (DxgK tag) -> memmove) highlighted)
+![[/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260525183332.png]] _Figure 6 - internal dxgkrnl chain + Full-Capture inset_ (The internal dxgkrnl call chain from NtGdiDdDDICreateContext through DXGDEVICE::CreateContext, with the three-step Full-Capture inset (RtlCopyVolatileMemory -> operator_new[] (DxgK tag) -> memmove) highlighted)
 
 Static analysis of `dxgkrnl!NtGdiDdDDICreateContext` shows three sequential operations on the user input:
 
