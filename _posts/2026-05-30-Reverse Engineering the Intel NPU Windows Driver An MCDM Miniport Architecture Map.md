@@ -1,6 +1,6 @@
 ---
 title: Reverse Engineering the Intel NPU Windows Driver - An MCDM Miniport Architecture Map
-date: 2026-05-21 15:01:00 +0100
+date: 2026-05-31 16:01:00 +0100
 categories:
   - Vulnerability Research
   - Reverse Engineering
