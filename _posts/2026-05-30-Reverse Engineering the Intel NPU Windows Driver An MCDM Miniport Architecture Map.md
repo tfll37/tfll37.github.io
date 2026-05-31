@@ -246,7 +246,7 @@ A note on the cleared region versus the slot offsets, since the two can look inc
 
 This fact makes any IOCTL-fuzzing plan against this driver, pointless. Searching the binary for `WdfIoQueueCreate` finds nothing. Searching for `IRP_MJ_DEVICE_CONTROL` finds nothing. One actual attack surface is the set of DDI callback functions enumerated above, reached from user mode through the D3DKMT API exported by `gdi32.dll` (functions like `D3DKMTCreateContext`, `D3DKMTSubmitCommand`, `D3DKMTEscape`), which dispatches through `win32k.sys` into `dxgkrnl.sys`, which then invokes the registered DDI on the miniport.
 
-![Diagram 3](/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260521165713.png) 
+![Diagram 3](/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260531163141.png) 
 _Figure 3 - Driver initialization and callback-structure registration._
 
 ![Diagram 4](/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/20260525182901.png)
