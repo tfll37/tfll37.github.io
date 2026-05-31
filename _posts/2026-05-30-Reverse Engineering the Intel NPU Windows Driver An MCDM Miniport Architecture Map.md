@@ -123,7 +123,7 @@ KSECDD.SYS     BCryptOpenAlgorithmProvider, BCryptHashData, BCryptFinishHash, ..
 WPPRECORDER.SYS imp_WppRecorderConfigure
 ```
 
-Full list: <a href="assets/txt/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/npu_kmd_table.txt" class="glightbox" data-type="txt" data-title="npu_kmd.sys - full import table">Full import table of npu_kmd.sys</a>
+Full list: <a href="/assets/txt/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/npu_kmd_import_table.txt">Full import table of npu_kmd.sys</a>
 
 Two observations follow directly from this list. First, the absence of `IoCreateDevice`/`IoCreateSymbolicLink` confirms the driver creates no device object of its own, and the absence of any `Wdf*` import confirms it is not KMDF-bound. Second, there is no static import of `dxgkrnl.sys` either. The driver does not link against the graphics kernel at load time. The MCDM interface is instead acquired _dynamically at runtime_: `DriverEntry` populates a callback structure and hands it to an internal routine (`IntelNPU_FrameworkInit`) that acquires the `dxgkrnl` interface through `IntelNPU_DxgkAcquireInterface__` and negotiates an interface IOCTL code via `DlpGetIoctlCode`. The classification of this driver as an MCDM miniport therefore rests on the _absence_ of both the WDM and KMDF marker sets combined with the presence of this runtime interface-negotiation path, not on a static `dxgkrnl` import. The functions the driver registers with `dxgkrnl` are detailed below.
 
@@ -190,7 +190,7 @@ Callbacks._1528_8_   = FUN_140003060;            // highest populated offset
 
 The complete map, covering all 79 slots with decimal and hex offset, write size, resolved target, and build-number gate, is also provided as a standalone, sortable HTML companion:
 
-<a href="assets/txt/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/npu_kmd_callback_map.txt" class="glightbox" data-type="txt" data-title="npu_kmd.sys - full DriverEntry callback-slot map">Full DriverEntry callback-slot map</a>
+<a href="/assets/txt/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/npu_kmd_callback_map.txt">Full DriverEntry callback-slot map</a>
 
 Several structural facts follow from the complete map. The context-creation slot is offset `_464`, holding `KmCreateContext_Wrapper` (`FUN_140002ed0`), which in turn invokes `KmCreateContext` (`FUN_14001ee70`) (the function is analyzed in Section 4), and its immediate neighbor `_472` (`FUN_140002fc0`) is the natural destroy-context candidate. The decompiler recovers three slots under symbolic names rather than raw offsets: `OnInitialize` at `_8`, `OnStart` at `_16`, and `OnStop` at `_112`. The lifecycle handlers cluster in the driver's own `0x1403aaXXX` range (`OnStart` = `FUN_1403aac70`, `OnStop` = `FUN_1403aacf0`, with `_24`/`_32` = `FUN_1403aadd0`/`FUN_1403aae40` adjacent); the bulk of the remaining unconditional slots point into the `FUN_140002xxx`–`FUN_140004xxx` and `FUN_14003xxxx` ranges, and a small post-version cluster (`_40`, `_64`, `_72`, `_80`, `_104`, `_816`, `_1104`) targets the contiguous `FUN_1400108f0`–`FUN_140010950` group.
 
@@ -565,4 +565,5 @@ About the next posts: I love talking about this in the end, because it kinda for
 ---
 
 _Offsets in `npu_kmd.sys` version `32.0.100.4723`._ 
-Love from [RaptX](https://raptx.org/) ![[assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/RAPTX-team-logo.png]]
+Love from [RaptX](https://raptx.org/) 
+![[assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/RAPTX-team-logo.png]]
