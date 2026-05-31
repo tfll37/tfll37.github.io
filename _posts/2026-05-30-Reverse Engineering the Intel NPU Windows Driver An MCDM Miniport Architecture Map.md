@@ -566,4 +566,4 @@ About the next posts: I love talking about this in the end, because it kinda for
 
 _Offsets in `npu_kmd.sys` version `32.0.100.4723`._ 
 Love from [RaptX](https://raptx.org/) 
-![[assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/RAPTX-team-logo.png]]
+![RaptX](/assets/img/posts/2026-05-30-reverse-engineering-the-intel-npu-windows-driver-an-mcdm-miniport-architecture-map/RAPTX-team-logo.png)
