@@ -10,7 +10,7 @@ baseurl: ""
 
 author:
   name: TFLL37
-  email: example@domain.com
+  # email removed to avoid showing example@domain.com in footer
 
 # Social links (used by Minima and SEO)
 social:
