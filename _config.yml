@@ -19,6 +19,13 @@ social:
     - https://github.com/tfll37
     - https://x.com/dingototh
 
+# Twitter / X username (used by Minima for the X icon and meta tags)
+twitter_username: dingototh
+
+# Pages to show in the header (Minima)
+header_pages:
+  - about.md
+
 # Google Analytics (GA4)
 google_analytics: G-G76T8KMRM4
 

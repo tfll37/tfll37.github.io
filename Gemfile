@@ -12,9 +12,13 @@ end
 
 gem "html-proofer", "~> 5.0", group: :test
 
-platforms :mingw, :x64_mingw, :mswin, :jruby do
+# Windows platform gems (tzinfo-data is still useful on Windows)
+# Note: modern RubyInstaller uses :windows platform in newer Bundler
+platforms :mingw, :x64_mingw, :mswin, :jruby, :windows do
   gem "tzinfo", ">= 1", "< 3"
   gem "tzinfo-data"
 end
 
-gem "wdm", "~> 0.2.0", :platforms => [:mingw, :x64_mingw, :mswin]
+# wdm removed temporarily - it requires native build tools (make).
+# Use `bundle exec jekyll serve --force_polling` instead on Windows.
+# gem "wdm", "~> 0.2.0", :platforms => [:mingw, :x64_mingw, :mswin]
